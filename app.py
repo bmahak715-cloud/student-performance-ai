@@ -41,6 +41,11 @@ def create_app(config_class=Config):
         # Do not expose internal details/stack traces to users
         return render_template('500.html'), 500
         
+    # Ensure all database tables are created on startup
+    # This is safe to call multiple times — SQLAlchemy only creates tables that don't exist yet
+    with app.app_context():
+        db.create_all()
+        
     return app
 
 if __name__ == '__main__':

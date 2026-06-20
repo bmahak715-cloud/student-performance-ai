@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: student-performance-ai
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: >
+      pip install -r requirements.txt &&
+      python -m ml.generate_dataset &&
+      python -m ml.train_model &&
+      python seed_db.py
+    startCommand: gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: RISK_LOW_THRESHOLD
+        value: "0.30"
+      - key: RISK_HIGH_THRESHOLD
+        value: "0.60"
+      - key: PYTHON_VERSION
+        value: "3.11.0"
