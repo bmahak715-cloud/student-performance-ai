@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Student - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="page-title text-white">Register New Student</h1>
+    <p class="page-subtitle text-muted">Create a student record and input initial academic details to initialize prediction capabilities.</p>
+</div>
+
+<form action="{{ url_for('student.add_student') }}" method="POST">
+    <div class="row g-4">
+        <!-- Section 1: Demographic & Institutional Metadata -->
+        <div class="col-12 col-lg-6">
+            <div class="glass-card h-100">
+                <h3 class="card-section-title text-info mb-4"><i class="fa-solid fa-address-card me-2"></i>Institutional Information</h3>
+                
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="student_id" class="form-label text-light small">Student ID (Institutional Unique ID)</label>
+                        <input type="text" class="form-control dark-input" id="student_id" name="student_id" 
+                               value="{{ form_data.student_id if form_data else '' }}" placeholder="STU2000" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="name" class="form-label text-light small">Full Name</label>
+                        <input type="text" class="form-control dark-input" id="name" name="name" 
+                               value="{{ form_data.name if form_data else '' }}" placeholder="John Doe" required>
+                    </div>
+                    
+                    <div class="col-12 col-sm-4">
+                        <label for="age" class="form-label text-light small">Age</label>
+                        <input type="number" class="form-control dark-input" id="age" name="age" 
+                               value="{{ form_data.age if form_data else '20' }}" min="15" max="100" required>
+                    </div>
+                    <div class="col-12 col-sm-8">
+                        <label for="course" class="form-label text-light small">Course Program</label>
+                        <input type="text" class="form-control dark-input" id="course" name="course" 
+                               value="{{ form_data.course if form_data else 'B.Sc Computer Science' }}" required>
+                    </div>
+                    
+                    <div class="col-12 col-sm-4">
+                        <label for="semester" class="form-label text-light small">Semester</label>
+                        <input type="number" class="form-control dark-input" id="semester" name="semester" 
+                               value="{{ form_data.semester if form_data else '4' }}" min="1" max="10" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label for="section" class="form-label text-light small">Section</label>
+                        <input type="text" class="form-control dark-input" id="section" name="section" 
+                               value="{{ form_data.section if form_data else 'A' }}" placeholder="A" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label for="previous_gpa" class="form-label text-light small">Previous Cumulative GPA</label>
+                        <input type="number" step="0.01" class="form-control dark-input" id="previous_gpa" name="previous_gpa" 
+                               value="{{ form_data.previous_gpa if form_data else '3.0' }}" min="0.00" max="4.00" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Section 2: Baseline Academic Performance -->
+        <div class="col-12 col-lg-6">
+            <div class="glass-card h-100">
+                <h3 class="card-section-title text-info mb-4"><i class="fa-solid fa-book-open me-2"></i>Baseline Academic Performance</h3>
+                
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="assignment_average" class="form-label text-light small">Assignment Average (0-100)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="assignment_average" name="assignment_average" 
+                               value="{{ form_data.assignment_average if form_data else '75.0' }}" min="0" max="100" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="quiz_average" class="form-label text-light small">Quiz Average (0-100)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="quiz_average" name="quiz_average" 
+                               value="{{ form_data.quiz_average if form_data else '75.0' }}" min="0" max="100" required>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6">
+                        <label for="midterm_marks" class="form-label text-light small">Midterm Marks (0-100)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="midterm_marks" name="midterm_marks" 
+                               value="{{ form_data.midterm_marks if form_data else '70.0' }}" min="0" max="100" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="practical_marks" class="form-label text-light small">Practical/Lab Marks (0-100)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="practical_marks" name="practical_marks" 
+                               value="{{ form_data.practical_marks if form_data else '80.0' }}" min="0" max="100" required>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6">
+                        <label for="project_marks" class="form-label text-light small">Course Project Marks (0-100)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="project_marks" name="project_marks" 
+                               value="{{ form_data.project_marks if form_data else '80.0' }}" min="0" max="100" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="previous_result" class="form-label text-light small">Prerequisite Course Result (0-100)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="previous_result" name="previous_result" 
+                               value="{{ form_data.previous_result if form_data else '75.0' }}" min="0" max="100" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Baseline Attendance Logs -->
+        <div class="col-12 col-lg-6">
+            <div class="glass-card">
+                <h3 class="card-section-title text-info mb-4"><i class="fa-solid fa-clipboard-user me-2"></i>Baseline Attendance</h3>
+                
+                <div class="row g-3">
+                    <div class="col-12 col-sm-6">
+                        <label for="total_classes" class="form-label text-light small">Total Conducted Classes</label>
+                        <input type="number" class="form-control dark-input" id="total_classes" name="total_classes" 
+                               value="{{ form_data.total_classes if form_data else '15' }}" min="1" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="attended_classes" class="form-label text-light small">Attended Classes</label>
+                        <input type="number" class="form-control dark-input" id="attended_classes" name="attended_classes" 
+                               value="{{ form_data.attended_classes if form_data else '13' }}" min="0" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="consecutive_absences" class="form-label text-light small">Current Consecutive Absences</label>
+                        <input type="number" class="form-control dark-input" id="consecutive_absences" name="consecutive_absences" 
+                               value="{{ form_data.consecutive_absences if form_data else '0' }}" min="0" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="late_arrivals" class="form-label text-light small">Late Arrivals</label>
+                        <input type="number" class="form-control dark-input" id="late_arrivals" name="late_arrivals" 
+                               value="{{ form_data.late_arrivals if form_data else '0' }}" min="0" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Baseline LMS Engagement Logs -->
+        <div class="col-12 col-lg-6">
+            <div class="glass-card">
+                <h3 class="card-section-title text-info mb-4"><i class="fa-solid fa-computer me-2"></i>LMS Digital Engagement</h3>
+                
+                <div class="row g-3">
+                    <div class="col-12 col-sm-4">
+                        <label for="login_frequency" class="form-label text-light small">Logins / Week</label>
+                        <input type="number" class="form-control dark-input" id="login_frequency" name="login_frequency" 
+                               value="{{ form_data.login_frequency if form_data else '8' }}" min="0" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label for="materials_accessed" class="form-label text-light small">Items Downloaded</label>
+                        <input type="number" class="form-control dark-input" id="materials_accessed" name="materials_accessed" 
+                               value="{{ form_data.materials_accessed if form_data else '40' }}" min="0" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label for="quiz_attempts" class="form-label text-light small">Quiz Practice Attempts</label>
+                        <input type="number" class="form-control dark-input" id="quiz_attempts" name="quiz_attempts" 
+                               value="{{ form_data.quiz_attempts if form_data else '3' }}" min="0" required>
+                    </div>
+                    
+                    <div class="col-12 col-sm-6">
+                        <label for="assignments_submitted" class="form-label text-light small">Submitted LMS Assignments</label>
+                        <input type="number" class="form-control dark-input" id="assignments_submitted" name="assignments_submitted" 
+                               value="{{ form_data.assignments_submitted if form_data else '5' }}" min="0" required>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="total_assignments" class="form-label text-light small">Total Course LMS Assignments</label>
+                        <input type="number" class="form-control dark-input" id="total_assignments" name="total_assignments" 
+                               value="{{ form_data.total_assignments if form_data else '5' }}" min="0" required>
+                    </div>
+                    
+                    <div class="col-12 col-sm-4">
+                        <label for="late_submissions" class="form-label text-light small">Late Submissions</label>
+                        <input type="number" class="form-control dark-input" id="late_submissions" name="late_submissions" 
+                               value="{{ form_data.late_submissions if form_data else '0' }}" min="0" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label for="time_spent" class="form-label text-light small">Time Spent (Hours/Week)</label>
+                        <input type="number" step="0.1" class="form-control dark-input" id="time_spent" name="time_spent" 
+                               value="{{ form_data.time_spent if form_data else '12.5' }}" min="0.0" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label for="discussion_participation" class="form-label text-light small">Discussion Board Posts</label>
+                        <input type="number" class="form-control dark-input" id="discussion_participation" name="discussion_participation" 
+                               value="{{ form_data.discussion_participation if form_data else '3' }}" min="0" required>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Submit Bar -->
+    <div class="glass-card mt-4 d-flex justify-content-end gap-3 p-3">
+        <a href="{{ url_for('student.list_students') }}" class="btn btn-outline-secondary text-light border-secondary px-4">Cancel</a>
+        <button type="submit" class="btn btn-info btn-glow px-5">Save Student Records</button>
+    </div>
+</form>
+{% endblock %}

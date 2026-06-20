@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Student Performance Early Intervention System{% endblock %}</title>
+    
+    <!-- Google Fonts (Outfit and Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom Style CSS (Premium Dark/Glassmorphic Theme) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="dark-theme">
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        {% if session.educator_id %}
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <i class="fa-solid fa-graduation-cap header-logo"></i>
+                <div class="brand-text">
+                    <span class="brand-title">AURA Academics</span>
+                    <span class="brand-subtitle">AI Intervention</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.blueprint == 'dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-chart-line nav-icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('student.list_students') }}" class="nav-item {% if request.blueprint == 'student' and request.endpoint != 'student.add_student' %}active{% endif %}">
+                    <i class="fa-solid fa-user-group nav-icon"></i>
+                    <span>Students</span>
+                </a>
+                <a href="{{ url_for('student.add_student') }}" class="nav-item {% if request.endpoint == 'student.add_student' %}active{% endif %}">
+                    <i class="fa-solid fa-user-plus nav-icon"></i>
+                    <span>Add Student</span>
+                </a>
+                <a href="{{ url_for('intervention.list_interventions') }}" class="nav-item {% if request.blueprint == 'intervention' %}active{% endif %}">
+                    <i class="fa-solid fa-hand-holding-hand nav-icon"></i>
+                    <span>Interventions</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="educator-profile">
+                    <div class="profile-avatar">
+                        {{ session.educator_name[0] | upper if session.educator_name else 'ED' }}
+                    </div>
+                    <div class="profile-details">
+                        <span class="profile-name">{{ session.educator_name }}</span>
+                        <span class="profile-role">Educator</span>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="logout-btn" title="Log Out">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="app-content-wrapper {% if not session.educator_id %}full-width{% endif %}">
+            <!-- Navbar Header -->
+            {% if session.educator_id %}
+            <header class="app-header">
+                <div class="header-search">
+                    <form action="{{ url_for('student.list_students') }}" method="GET" class="d-flex">
+                        <div class="search-input-group">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" name="search" placeholder="Search students, courses..." value="{{ request.args.get('search', '') }}">
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="date-badge">
+                        <i class="fa-regular fa-calendar-days me-2 text-info"></i>
+                        <span id="current-date-display">June 20, 2026</span>
+                    </div>
+                </div>
+            </header>
+            {% endif %}
+            
+            <!-- Toast/Alert System -->
+            <div class="container-fluid mt-3">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show custom-alert" role="alert">
+                                <i class="fa-solid {% if category == 'success' %}fa-circle-check{% elif category == 'danger' %}fa-triangle-exclamation{% else %}fa-circle-info{% endif %} me-2"></i>
+                                {{ message }}
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <!-- Page Body -->
+            <div class="content-body container-fluid py-4">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Base Javascript -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Internal Server Error - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75 text-center">
+    <div class="col-12 col-md-6">
+        <div class="glass-card py-5 px-4">
+            <i class="fa-solid fa-server fa-5x text-danger mb-4"></i>
+            <h1 class="display-5 text-white fw-bold">500</h1>
+            <h2 class="h4 text-muted mb-4">Internal Server Error</h2>
+            <p class="text-light mb-4">
+                The server encountered an internal error or misconfiguration and was unable to complete your request. 
+                Please contact your systems administrator or try again later.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="javascript:history.back()" class="btn btn-outline-secondary text-light border-secondary px-4">Go Back</a>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-info btn-glow px-4">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

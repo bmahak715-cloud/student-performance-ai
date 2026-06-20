@@ -1,0 +1,3 @@
+# This file ensures the models/ directory is tracked by git.
+# Trained model .pkl files are excluded via .gitignore (they are large binaries).
+# Run `python -m ml.train_model` to regenerate all model artifacts.

@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Interventions - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h1 class="page-title text-white">Academic Interventions</h1>
+    <p class="page-subtitle text-muted">Track support plans, follow-ups, and outcomes registered for at-risk students.</p>
+</div>
+
+<!-- Filters -->
+<div class="glass-card mb-4 p-3">
+    <form action="{{ url_for('intervention.list_interventions') }}" method="GET" class="row g-3 align-items-center">
+        <div class="col-12 col-md-4">
+            <select name="status" class="form-select dark-input">
+                <option value="">All Statuses</option>
+                <option value="Planned" {% if status == 'Planned' %}selected{% endif %}>Planned</option>
+                <option value="In Progress" {% if status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                <option value="Completed" {% if status == 'Completed' %}selected{% endif %}>Completed</option>
+                <option value="Cancelled" {% if status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+            </select>
+        </div>
+        
+        <div class="col-12 col-md-5">
+            <select name="type" class="form-select dark-input">
+                <option value="">All Intervention Strategies</option>
+                {% for option in supported_types %}
+                    <option value="{{ option }}" {% if type == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="col-12 col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-info w-100">Filter</button>
+            <a href="{{ url_for('intervention.list_interventions') }}" class="btn btn-outline-secondary text-light border-secondary w-100">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Interventions Table -->
+<div class="glass-card p-0">
+    <div class="table-responsive">
+        <table class="table table-hover custom-table align-middle m-0 small">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-4">Student</th>
+                    <th scope="col">Strategy Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Registered Date</th>
+                    <th scope="col">Follow-up Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if interventions %}
+                    {% for item in interventions %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="student-avatar-round me-2 bg-secondary" style="width:25px; height:25px; font-size: 10px;">
+                                    {{ item.student.name[0] | upper }}
+                                </div>
+                                <div>
+                                    <span class="fw-bold text-white d-block">{{ item.student.name }}</span>
+                                    <span class="text-muted small" style="font-size: 10px;">ID: {{ item.student.student_id }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="fw-semibold text-info">{{ item.intervention_type }}</td>
+                        <td>
+                            <div class="text-truncate" style="max-width: 250px;" title="{{ item.description }}">
+                                {{ item.description }}
+                            </div>
+                        </td>
+                        <td>{{ item.intervention_date | datetime("%b %d, %Y") }}</td>
+                        <td>
+                            {% if item.follow_up_date %}
+                                <span class="fw-semibold text-white">{{ item.follow_up_date | datetime("%Y-%m-%d") }}</span>
+                            {% else %}
+                                <span class="text-muted">None Set</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if item.status == 'Completed' else 'warning' if item.status == 'In Progress' else 'secondary' }} px-3 py-2">
+                                {{ item.status }}
+                            </span>
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{{ url_for('student.show_student', student_db_id=item.student_id) }}" class="btn btn-sm btn-outline-info">
+                                <i class="fa-solid fa-eye me-1"></i>View Profile
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else: %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-hand-holding-hand fa-3x mb-3 text-secondary"></i>
+                            <p class="m-0">No intervention history logs match the current filters.</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

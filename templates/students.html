@@ -1,0 +1,154 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Students - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title text-white">Student Directory</h1>
+        <p class="page-subtitle text-muted">View, search, and monitor student academic risk classifications.</p>
+    </div>
+    <a href="{{ url_for('student.add_student') }}" class="btn btn-info btn-glow px-4">
+        <i class="fa-solid fa-user-plus me-2"></i>Add Student
+    </a>
+</div>
+
+<!-- Filters Bar -->
+<div class="glass-card mb-4 p-3">
+    <form action="{{ url_for('student.list_students') }}" method="GET" class="row g-3 align-items-center">
+        <!-- Search Input -->
+        <div class="col-12 col-md-5">
+            <div class="search-input-group m-0" style="width: 100%;">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" name="search" placeholder="Search by name, ID, or course..." value="{{ search }}">
+            </div>
+        </div>
+        
+        <!-- Risk Filters -->
+        <div class="col-12 col-sm-6 col-md-3">
+            <select name="risk" class="form-select dark-input">
+                <option value="">All Risk Levels</option>
+                <option value="low" {% if risk == 'low' %}selected{% endif %}>Low Risk</option>
+                <option value="medium" {% if risk == 'medium' %}selected{% endif %}>Medium Risk</option>
+                <option value="high" {% if risk == 'high' %}selected{% endif %}>High Risk</option>
+                <option value="unpredicted" {% if risk == 'unpredicted' %}selected{% endif %}>Unpredicted</option>
+            </select>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="col-12 col-sm-6 col-md-4 d-flex gap-2">
+            <button type="submit" class="btn btn-info w-100">Filter</button>
+            <a href="{{ url_for('student.list_students') }}" class="btn btn-outline-secondary text-light border-secondary w-100">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Student Grid/Table -->
+<div class="glass-card p-0">
+    <div class="table-responsive">
+        <table class="table table-hover custom-table align-middle m-0">
+            <thead>
+                <tr>
+                    <th scope="col" class="ps-4">Student ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Course / Sec</th>
+                    <th scope="col">Semester</th>
+                    <th scope="col">Attendance</th>
+                    <th scope="col">Predicted Marks</th>
+                    <th scope="col">Risk Level</th>
+                    <th scope="col" class="text-end pe-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if students %}
+                    {% for student, pred, att in students %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-info">{{ student.student_id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="student-avatar-round me-2 bg-secondary" style="width:30px; height:30px; font-size: 11px;">
+                                    {{ student.name[0] | upper }}
+                                </div>
+                                <span class="fw-semibold text-white">{{ student.name }}</span>
+                            </div>
+                        </td>
+                        <td><span class="text-muted small">{{ student.course }} • Sec {{ student.section }}</span></td>
+                        <td>Sem {{ student.semester }}</td>
+                        <td>
+                            {% if att %}
+                                <span class="fw-bold {% if att.attendance_percentage < 75 %}text-danger{% else %}text-white{% endif %}">
+                                    {{ att.attendance_percentage | round(1) }}%
+                                </span>
+                            {% else %}
+                                <span class="text-muted">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pred %}
+                                <span class="fw-bold text-white">{{ pred.predicted_marks | round(1) }} / 100</span>
+                            {% else %}
+                                <span class="text-muted">Unpredicted</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if pred %}
+                                <span class="badge bg-{{ pred.risk_level | risk_badge }} px-3 py-2">
+                                    {{ pred.risk_level }} Risk
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary px-3 py-2">No Prediction</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{{ url_for('student.show_student', student_db_id=student.id) }}" class="btn btn-sm btn-outline-info" title="View Profile">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('student.edit_student', student_db_id=student.id) }}" class="btn btn-sm btn-outline-warning" title="Edit Metadata">
+                                    <i class="fa-solid fa-user-pen"></i>
+                                </a>
+                                <form action="{{ url_for('student.delete_student', student_db_id=student.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete student {{ student.name }}? This action is irreversible.');" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Student">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else: %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-user-slash fa-3x mb-3 text-secondary"></i>
+                            <p class="m-0">No student records found matching the current search parameters.</p>
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination Controls -->
+{% if total_pages > 1 %}
+<nav class="d-flex justify-content-center mt-4">
+    <ul class="pagination custom-pagination">
+        <li class="page-item {% if page == 1 %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('student.list_students', search=search, risk=risk, page=page-1) }}">
+                <i class="fa-solid fa-chevron-left"></i>
+            </a>
+        </li>
+        {% for p in range(1, total_pages + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+            <a class="page-link" href="{{ url_for('student.list_students', search=search, risk=risk, page=p) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+            <a class="page-link" href="{{ url_for('student.list_students', search=search, risk=risk, page=page+1) }}">
+                <i class="fa-solid fa-chevron-right"></i>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

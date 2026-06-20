@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="glass-card auth-card text-center">
+            <div class="auth-header mb-4">
+                <i class="fa-solid fa-graduation-cap auth-logo mb-2 text-info"></i>
+                <h2 class="auth-title h3 text-white">Create Educator Account</h2>
+                <p class="auth-subtitle text-muted">AURA Early Intervention Portal</p>
+            </div>
+            
+            <form action="{{ url_for('auth.register') }}" method="POST">
+                
+                <div class="mb-3 text-start">
+                    <label for="name" class="form-label text-light small">Full Name</label>
+                    <div class="input-group dark-input-group">
+                        <span class="input-group-text dark-input-text"><i class="fa-regular fa-user"></i></span>
+                        <input type="text" class="form-control dark-input" id="name" name="name" value="{{ name or '' }}" placeholder="Dr. Sarah Jenkins" required>
+                    </div>
+                </div>
+                
+                <div class="mb-3 text-start">
+                    <label for="email" class="form-label text-light small">Email Address</label>
+                    <div class="input-group dark-input-group">
+                        <span class="input-group-text dark-input-text"><i class="fa-regular fa-envelope"></i></span>
+                        <input type="email" class="form-control dark-input" id="email" name="email" value="{{ email or '' }}" placeholder="name@college.edu" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4 text-start">
+                    <label for="password" class="form-label text-light small">Password (Min. 6 characters)</label>
+                    <div class="input-group dark-input-group">
+                        <span class="input-group-text dark-input-text"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" class="form-control dark-input" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-info w-100 btn-glow mb-3">Sign Up</button>
+            </form>
+            
+            <div class="auth-footer mt-4">
+                <span class="text-muted small">Already have an account? </span>
+                <a href="{{ url_for('auth.login') }}" class="text-info text-decoration-none small fw-semibold">Sign In</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

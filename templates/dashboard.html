@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="dashboard-header mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title text-white">Academic risk overview</h1>
+            <p class="page-subtitle text-muted">
+                B.Sc Computer Science • Semester 4 • Section A • {{ total_students }} students
+            </p>
+        </div>
+        <div class="timestamp text-muted small">
+            Updated today, <span id="clock-display">9:40 am</span>
+        </div>
+    </div>
+</div>
+
+<!-- Aggregated Metrics Row -->
+<div class="row g-4 mb-4">
+    <!-- Low Risk Card -->
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="glass-card metric-card">
+            <div class="metric-info">
+                <span class="metric-label text-muted">Low risk</span>
+                <span class="metric-value text-success">{{ low_risk }}</span>
+            </div>
+            <div class="progress metric-progress">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ (low_risk / total_students * 100) if total_students > 0 else 0 }}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Medium Risk Card -->
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="glass-card metric-card">
+            <div class="metric-info">
+                <span class="metric-label text-muted">Medium risk</span>
+                <span class="metric-value text-warning">{{ med_risk }}</span>
+            </div>
+            <div class="progress metric-progress">
+                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ (med_risk / total_students * 100) if total_students > 0 else 0 }}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- High Risk Card -->
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="glass-card metric-card">
+            <div class="metric-info">
+                <span class="metric-label text-muted">High risk</span>
+                <span class="metric-value text-danger">{{ high_risk }}</span>
+            </div>
+            <div class="progress metric-progress">
+                <div class="progress-bar bg-danger" role="progressbar" style="width: {{ (high_risk / total_students * 100) if total_students > 0 else 0 }}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Avg Attendance Card -->
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="glass-card metric-card">
+            <div class="metric-info">
+                <span class="metric-label text-muted">Avg. attendance</span>
+                <span class="metric-value text-white">{{ avg_attendance }}%</span>
+            </div>
+            <div class="metric-trend text-danger small mt-2">
+                <i class="fa-solid fa-arrow-down me-1"></i> 3 pts this month
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Visualizations Row -->
+<div class="row g-4 mb-4">
+    <!-- Line Chart: Attendance vs Marks -->
+    <div class="col-12 col-lg-8">
+        <div class="glass-card chart-card">
+            <h3 class="card-section-title mb-4">Attendance vs predicted marks, last 6 weeks</h3>
+            <div class="chart-container" style="position: relative; height:280px; width: 100%;">
+                <canvas id="attendanceMarksChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Donut Chart: Risk Distribution -->
+    <div class="col-12 col-lg-4">
+        <div class="glass-card chart-card text-center">
+            <h3 class="card-section-title mb-4 text-start">Class risk distribution</h3>
+            <div class="chart-container d-flex justify-content-center align-items-center" style="position: relative; height:280px; width: 100%;">
+                <canvas id="riskDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Watchlists and Pending Interventions -->
+<div class="row g-4">
+    <!-- Student Watchlist -->
+    <div class="col-12 col-lg-7">
+        <div class="glass-card list-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="card-section-title m-0">Watchlist • sorted by risk probability</h3>
+                <a href="{{ url_for('student.list_students', risk='high') }}" class="btn btn-dark btn-sm text-info border-info-subtle px-3">View all students</a>
+            </div>
+            
+            <div class="student-watchlist-container">
+                {% if watchlist_high_risk %}
+                    {% for student, pred, att in watchlist_high_risk %}
+                    <div class="watchlist-item glass-card mb-3" onclick="location.href='{{ url_for('student.show_student', student_db_id=student.id) }}'">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <div class="student-avatar-round me-3">
+                                    {{ student.name[0] | upper }}
+                                </div>
+                                <div class="student-meta-summary">
+                                    <h4 class="student-watchlist-name text-white m-0">{{ student.name }} <span class="student-watchlist-id text-muted small ms-2">{{ student.student_id }}</span></h4>
+                                    <span class="student-watchlist-subtext text-muted small">
+                                        Attendance {{ att.attendance_percentage | round(1) if att else 'N/A' }}% • Predicted {{ pred.predicted_marks | round(1) }} marks
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div class="watchlist-risk-indicator text-end d-flex align-items-center">
+                                <span class="watchlist-risk-pct text-danger fw-bold me-3">{{ (pred.risk_probability * 100) | round(0) }}%</span>
+                                <div class="risk-bar-mini bg-dark-subtle">
+                                    <div class="risk-bar-fill bg-danger" style="width: {{ (pred.risk_probability * 100) | round(0) }}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else: %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-circle-check fa-3x text-success mb-3"></i>
+                        <p class="m-0">No students are flagged as High Risk currently!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Upcoming Follow-Ups & Risks Increased -->
+    <div class="col-12 col-lg-5">
+        <!-- Upcoming followups -->
+        <div class="glass-card list-card mb-4">
+            <h3 class="card-section-title mb-4">Upcoming follow-ups</h3>
+            <div class="upcoming-container">
+                {% if upcoming_followups %}
+                    {% for item in upcoming_followups %}
+                        <div class="upcoming-item d-flex align-items-start mb-3 border-bottom border-dark pb-2">
+                            <div class="follow-up-badge bg-info-subtle text-info rounded p-2 me-3 text-center">
+                                <i class="fa-regular fa-clock"></i>
+                            </div>
+                            <div class="follow-up-meta">
+                                <h5 class="follow-up-student text-white m-0 small fw-bold">
+                                    <a href="{{ url_for('student.show_student', student_db_id=item.student_id) }}" class="text-white text-decoration-none">
+                                        {{ item.student.name }}
+                                    </a>
+                                </h5>
+                                <p class="follow-up-details text-muted m-0 small">
+                                    {{ item.intervention_type }} • Due {{ item.follow_up_date | datetime("%b %d, %Y") }}
+                                </p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3 m-0 small">No follow-ups scheduled for the upcoming week.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Risk Increased Watchlist -->
+        <div class="glass-card list-card">
+            <h3 class="card-section-title mb-4 text-warning">Risk level increased</h3>
+            <div class="risk-increased-container">
+                {% if risk_increased %}
+                    {% for item in risk_increased %}
+                        <div class="risk-increased-item d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom border-dark" onclick="location.href='{{ url_for('student.show_student', student_db_id=item.student.id) }}'">
+                            <div>
+                                <h5 class="text-white m-0 small fw-bold">{{ item.student.name }}</h5>
+                                <span class="text-muted small">Previous Prob: {{ (item.prev_pred.risk_probability*100)|round(1) }}%</span>
+                            </div>
+                            <div class="text-danger small fw-bold text-end">
+                                <i class="fa-solid fa-arrow-trend-up me-1"></i>
+                                +{{ item.increase | round(1) }}%
+                                <div class="text-white small">Current: {{ (item.latest_pred.risk_probability*100)|round(1) }}%</div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-3 m-0 small">No students registered a significant increase in risk probability this week.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Embedded Script configuration for Chart.js rendering -->
+<script>
+    const riskChartData = {{ risk_chart_data | safe }};
+    const attendanceChartData = {{ attendance_chart_data | safe }};
+    const marksChartData = {{ marks_chart_data | safe }};
+    const classTrendData = {{ class_trend_data | safe }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}

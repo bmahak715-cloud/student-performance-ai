@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75 text-center">
+    <div class="col-12 col-md-6">
+        <div class="glass-card py-5 px-4">
+            <i class="fa-solid fa-compass fa-5x text-info mb-4 animate-bounce"></i>
+            <h1 class="display-5 text-white fw-bold">404</h1>
+            <h2 class="h4 text-muted mb-4">Oops! Page Not Found</h2>
+            <p class="text-light mb-4">
+                The resource or student record you are trying to access does not exist, has been removed, or the link is broken.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="javascript:history.back()" class="btn btn-outline-secondary text-light border-secondary px-4">Go Back</a>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-info btn-glow px-4">Go to Dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In - AURA Academics{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
+        <div class="glass-card auth-card text-center">
+            <div class="auth-header mb-4">
+                <i class="fa-solid fa-graduation-cap auth-logo mb-2 text-info"></i>
+                <h2 class="auth-title h3 text-white">Educator Login</h2>
+                <p class="auth-subtitle text-muted">AURA Early Intervention Portal</p>
+            </div>
+            
+            <form action="{{ url_for('auth.login') }}" method="POST">
+                <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+                
+                <div class="mb-3 text-start">
+                    <label for="email" class="form-label text-light small">Email Address</label>
+                    <div class="input-group dark-input-group">
+                        <span class="input-group-text dark-input-text"><i class="fa-regular fa-envelope"></i></span>
+                        <input type="email" class="form-control dark-input" id="email" name="email" value="{{ email or '' }}" placeholder="name@college.edu" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4 text-start">
+                    <div class="d-flex justify-content-between">
+                        <label for="password" class="form-label text-light small">Password</label>
+                    </div>
+                    <div class="input-group dark-input-group">
+                        <span class="input-group-text dark-input-text"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" class="form-control dark-input" id="password" name="password" placeholder="••••••••" required>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-info w-100 btn-glow mb-3">Sign In</button>
+            </form>
+            
+            <div class="auth-footer mt-4">
+                <span class="text-muted small">New to AURA? </span>
+                <a href="{{ url_for('auth.register') }}" class="text-info text-decoration-none small fw-semibold">Create an Account</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

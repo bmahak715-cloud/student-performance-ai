@@ -1,0 +1,515 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ student.name }} Profile - AURA Academics{% endblock %}
+
+{% block content %}
+<!-- Student Header Information -->
+<div class="glass-card mb-4 p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="student-avatar-round font-large" style="width: 70px; height: 70px; font-size: 28px;">
+                {{ student.name[0] | upper }}
+            </div>
+            <div>
+                <h1 class="student-name-large text-white m-0">{{ student.name }}</h1>
+                <p class="text-muted m-0">
+                    ID: <strong class="text-info">{{ student.student_id }}</strong> • {{ student.course }} • Sem {{ student.semester }} • Sec {{ student.section }}
+                </p>
+                <span class="badge bg-secondary mt-1">Age: {{ student.age }}</span>
+                <span class="badge bg-dark-subtle border border-secondary mt-1 ms-1">Previous GPA: {{ student.previous_gpa | round(2) }} / 4.00</span>
+            </div>
+        </div>
+        
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('student.edit_student', student_db_id=student.id) }}" class="btn btn-outline-warning">
+                <i class="fa-solid fa-user-pen me-2"></i>Edit Metadata
+            </a>
+            
+            <form action="{{ url_for('prediction.run_prediction_view', student_db_id=student.id) }}" method="POST">
+                <button type="submit" class="btn btn-info btn-glow">
+                    <i class="fa-solid fa-arrows-rotate me-2 animate-spin-hover"></i>Generate Prediction
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation Tabs -->
+<ul class="nav nav-tabs custom-tabs mb-4" id="studentProfileTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="true">
+            <i class="fa-solid fa-brain me-2 text-info"></i>AI Prediction & Support
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="academic-tab" data-bs-toggle="tab" data-bs-target="#academic" type="button" role="tab" aria-controls="academic" aria-selected="false">
+            <i class="fa-solid fa-book-open me-2 text-warning"></i>Academic Records
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="attendance-lms-tab" data-bs-toggle="tab" data-bs-target="#attendance-lms" type="button" role="tab" aria-controls="attendance-lms" aria-selected="false">
+            <i class="fa-solid fa-laptop me-2 text-success"></i>Attendance & LMS Logs
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="charts-tab" data-bs-toggle="tab" data-bs-target="#charts" type="button" role="tab" aria-controls="charts" aria-selected="false">
+            <i class="fa-solid fa-chart-area me-2 text-danger"></i>Performance Charts
+        </button>
+    </li>
+</ul>
+
+<!-- Tab Contents -->
+<div class="tab-content" id="studentProfileTabsContent">
+    
+    <!-- Tab 1: AI Prediction & Support -->
+    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+        <div class="row g-4">
+            <!-- Latest Prediction Score Card -->
+            <div class="col-12 col-lg-5">
+                <div class="glass-card mb-4 h-100">
+                    <h3 class="card-section-title mb-4"><i class="fa-solid fa-chart-bar text-info me-2"></i>Prediction Assessment</h3>
+                    
+                    {% if prediction %}
+                    <div class="text-center py-4 mb-4 border-bottom border-dark">
+                        <span class="text-muted small d-block mb-1">RISK PROBABILITY</span>
+                        <h2 class="risk-prob-title text-{{ prediction.risk_level | risk_badge }} display-4 fw-extrabold m-0">
+                            {{ (prediction.risk_probability * 100) | round(1) }}%
+                        </h2>
+                        <span class="badge bg-{{ prediction.risk_level | risk_badge }} px-4 py-2 mt-2" style="font-size: 14px;">
+                            {{ prediction.risk_level }} Risk
+                        </span>
+                    </div>
+                    
+                    <div class="row g-3 text-center mb-4">
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Expected Final Marks</span>
+                            <span class="h4 text-white fw-bold">{{ prediction.predicted_marks | round(1) }} / 100</span>
+                        </div>
+                        <div class="col-6">
+                            <span class="text-muted small d-block">Estimated Completion</span>
+                            <span class="h4 text-white fw-bold">{{ prediction.completion_probability | round(1) }}%</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Attributions (Model features importance) -->
+                    <div class="risk-attributions-section">
+                        <h4 class="small text-muted fw-bold mb-3">MODEL CONTRIBUTING FACTORS</h4>
+                        {% set feats = prediction.important_features | json_parse %}
+                        
+                        <div class="mb-3">
+                            <span class="small text-danger d-block mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i>Risk-Increasing Metrics:</span>
+                            <ul class="list-unstyled ps-3 small text-light">
+                                {% for item in feats.increasing_factors %}
+                                    <li class="mb-1"><i class="fa-solid fa-caret-right text-danger me-2"></i>{{ item }}</li>
+                                {% else %}
+                                    <li><i class="fa-solid fa-check text-success me-2"></i>No major negative metrics.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <span class="small text-success d-block mb-2"><i class="fa-solid fa-circle-check me-1"></i>Risk-Reducing Metrics:</span>
+                            <ul class="list-unstyled ps-3 small text-light">
+                                {% for item in feats.reducing_factors %}
+                                    <li class="mb-1"><i class="fa-solid fa-caret-right text-success me-2"></i>{{ item }}</li>
+                                {% else %}
+                                    <li><i class="fa-solid fa-minus text-muted me-2"></i>No major positive metrics.</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-triangle-exclamation fa-3x mb-3 text-warning"></i>
+                        <p>No predictive analysis logged for this student yet.</p>
+                        <p class="small text-muted">Complete academic records, attendance, and LMS logs to run prediction.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Plain-Language Explanation -->
+            <div class="col-12 col-lg-7">
+                <div class="glass-card mb-4">
+                    <h3 class="card-section-title mb-4"><i class="fa-regular fa-comment-dots text-info me-2"></i>Plain-Language Explanation</h3>
+                    {% if prediction %}
+                        <div class="plain-explanation-body text-light text-justify formatted-markdown mb-3">
+                            {{ prediction.explanation | safe }}
+                        </div>
+                    {% else %}
+                        <p class="text-muted small">Once prediction is generated, a plain-language summary of contributing factors and safety disclosures will render here.</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Active Interventions / History -->
+                <div class="glass-card">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="card-section-title m-0"><i class="fa-solid fa-hand-holding-hand text-info me-2"></i>Intervention Plan</h3>
+                        <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#addInterventionModal">
+                            <i class="fa-solid fa-plus me-1"></i>Record Intervention
+                        </button>
+                    </div>
+                    
+                    <div class="intervention-timeline">
+                        {% if interventions %}
+                            {% for item in interventions %}
+                            <div class="intervention-card glass-card mb-3 p-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h4 class="h6 text-white m-0 fw-bold">{{ item.intervention_type }}</h4>
+                                        <span class="text-muted small">Registered by Dr. Jenkins on {{ item.intervention_date | datetime("%b %d, %Y") }}</span>
+                                    </div>
+                                    <span class="badge bg-{{ 'success' if item.status == 'Completed' else 'warning' if item.status == 'In Progress' else 'secondary' }} px-3 py-1">
+                                        {{ item.status }}
+                                    </span>
+                                </div>
+                                <p class="small text-light mb-2">{{ item.description }}</p>
+                                
+                                {% if item.follow_up_date %}
+                                    <div class="small text-info mb-2">
+                                        <i class="fa-regular fa-calendar me-1"></i>Follow-up Date: {{ item.follow_up_date | datetime("%Y-%m-%d") }}
+                                    </div>
+                                {% endif %}
+                                
+                                {% if item.outcome_notes %}
+                                    <div class="outcome-box bg-black-subtle p-2 rounded border-start border-3 border-info text-muted small mt-2">
+                                        <strong>Outcome Notes:</strong> {{ item.outcome_notes }}
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Update status trigger -->
+                                {% if item.status in ['Planned', 'In Progress'] %}
+                                <form action="{{ url_for('intervention.update_intervention_view', int_id=item.id) }}" method="POST" class="mt-2 d-flex gap-2">
+                                    <select name="status" class="form-select form-select-sm dark-input" style="width: auto;">
+                                        <option value="In Progress" {% if item.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                    <input type="text" name="outcome_notes" placeholder="Update outcome remarks..." class="form-control form-control-sm dark-input" style="flex:1;">
+                                    <button type="submit" class="btn btn-sm btn-warning">Update</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-muted text-center py-3 m-0 small">No active or historic interventions registered.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 2: Academic Records -->
+    <div class="tab-pane fade" id="academic" role="tabpanel" aria-labelledby="academic-tab">
+        <div class="row g-4">
+            <!-- Academic Log Table -->
+            <div class="col-12 col-lg-8">
+                <div class="glass-card">
+                    <h3 class="card-section-title mb-4"><i class="fa-solid fa-list-check text-warning me-2"></i>Assessment History</h3>
+                    <div class="table-responsive">
+                        <table class="table custom-table text-light align-middle m-0 small">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Assignments (Avg)</th>
+                                    <th>Quizzes (Avg)</th>
+                                    <th>Midterm</th>
+                                    <th>Practical</th>
+                                    <th>Project</th>
+                                    <th>Prereq Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if academic_history %}
+                                    {% for item in academic_history | reverse %}
+                                    <tr>
+                                        <td>{{ item.record_date | datetime("%b %d, %Y") }}</td>
+                                        <td class="fw-bold text-info">{{ item.assignment_average | round(1) }}%</td>
+                                        <td class="fw-bold">{{ item.quiz_average | round(1) }}%</td>
+                                        <td>{{ item.midterm_marks | round(1) }}</td>
+                                        <td>{{ item.practical_marks | round(1) }}</td>
+                                        <td>{{ item.project_marks | round(1) }}</td>
+                                        <td>{{ item.previous_result | round(1) }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="text-center py-4 text-muted">No academic records logged.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Log New Academic Record Form -->
+            <div class="col-12 col-lg-4">
+                <div class="glass-card">
+                    <h3 class="card-section-title text-warning mb-4"><i class="fa-solid fa-plus me-2"></i>Log Assessment</h3>
+                    <form action="{{ url_for('student.add_academic_record', student_db_id=student.id) }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Assignment Average (0-100)</label>
+                            <input type="number" step="0.1" name="assignment_average" class="form-control dark-input" value="{{ academic.assignment_average if academic else '70.0' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Quiz Average (0-100)</label>
+                            <input type="number" step="0.1" name="quiz_average" class="form-control dark-input" value="{{ academic.quiz_average if academic else '70.0' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Midterm Marks (0-100)</label>
+                            <input type="number" step="0.1" name="midterm_marks" class="form-control dark-input" value="{{ academic.midterm_marks if academic else '70.0' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Practical Marks (0-100)</label>
+                            <input type="number" step="0.1" name="practical_marks" class="form-control dark-input" value="{{ academic.practical_marks if academic else '70.0' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Project Marks (0-100)</label>
+                            <input type="number" step="0.1" name="project_marks" class="form-control dark-input" value="{{ academic.project_marks if academic else '70.0' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Prerequisite Course Result (0-100)</label>
+                            <input type="number" step="0.1" name="previous_result" class="form-control dark-input" value="{{ academic.previous_result if academic else '70.0' }}" required>
+                        </div>
+                        <button type="submit" class="btn btn-warning w-100">Log Record</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 3: Attendance & LMS Logs -->
+    <div class="tab-pane fade" id="attendance-lms" role="tabpanel" aria-labelledby="attendance-lms-tab">
+        <div class="row g-4 mb-4">
+            <!-- Attendance History -->
+            <div class="col-12 col-lg-8">
+                <div class="glass-card mb-4">
+                    <h3 class="card-section-title mb-4 text-success"><i class="fa-solid fa-calendar-check me-2"></i>Attendance Logs</h3>
+                    <div class="table-responsive">
+                        <table class="table custom-table text-light align-middle m-0 small">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Conducted</th>
+                                    <th>Attended</th>
+                                    <th>Percentage</th>
+                                    <th>Consecutive Absences</th>
+                                    <th>Late Arrivals</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if attendance_history %}
+                                    {% for item in attendance_history | reverse %}
+                                    <tr>
+                                        <td>{{ item.record_date | datetime("%b %d, %Y") }}</td>
+                                        <td>{{ item.total_classes }}</td>
+                                        <td>{{ item.attended_classes }}</td>
+                                        <td class="fw-bold text-success">{{ item.attendance_percentage | round(1) }}%</td>
+                                        <td class="{% if item.consecutive_absences >= 4 %}text-danger fw-bold{% endif %}">{{ item.consecutive_absences }}</td>
+                                        <td>{{ item.late_arrivals }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">No attendance logs found.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- LMS logs -->
+                <div class="glass-card">
+                    <h3 class="card-section-title mb-4 text-success"><i class="fa-solid fa-desktop me-2"></i>LMS Logs</h3>
+                    <div class="table-responsive">
+                        <table class="table custom-table text-light align-middle m-0 small">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Logins/Wk</th>
+                                    <th>Downloads</th>
+                                    <th>Quiz Try</th>
+                                    <th>Submits</th>
+                                    <th>Late Subs</th>
+                                    <th>Hrs Spent</th>
+                                    <th>Posts</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if lms_history %}
+                                    {% for item in lms_history | reverse %}
+                                    <tr>
+                                        <td>{{ item.record_date | datetime("%b %d, %Y") }}</td>
+                                        <td>{{ item.login_frequency }}</td>
+                                        <td>{{ item.materials_accessed }}</td>
+                                        <td>{{ item.quiz_attempts }}</td>
+                                        <td class="fw-bold text-success">{{ item.assignments_submitted }} / {{ item.total_assignments }}</td>
+                                        <td class="{% if item.late_submissions > 0 %}text-warning{% endif %}">{{ item.late_submissions }}</td>
+                                        <td class="fw-bold text-info">{{ item.time_spent | round(1) }}</td>
+                                        <td>{{ item.discussion_participation }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">No LMS logs found.</td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Log forms -->
+            <div class="col-12 col-lg-4">
+                <div class="glass-card mb-4">
+                    <h3 class="card-section-title text-success mb-4"><i class="fa-solid fa-plus me-2"></i>Log Attendance</h3>
+                    <form action="{{ url_for('student.add_attendance_record', student_db_id=student.id) }}" method="POST">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Total Conducted Classes</label>
+                            <input type="number" name="total_classes" class="form-control dark-input" value="{{ attendance.total_classes if attendance else '15' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Attended Classes</label>
+                            <input type="number" name="attended_classes" class="form-control dark-input" value="{{ attendance.attended_classes if attendance else '13' }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Consecutive Absences</label>
+                            <input type="number" name="consecutive_absences" class="form-control dark-input" value="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Late Arrivals</label>
+                            <input type="number" name="late_arrivals" class="form-control dark-input" value="0" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 text-dark fw-bold">Log Attendance</button>
+                    </form>
+                </div>
+                
+                <div class="glass-card">
+                    <h3 class="card-section-title text-success mb-4"><i class="fa-solid fa-plus me-2"></i>Log LMS Engagement</h3>
+                    <form action="{{ url_for('student.add_lms_record', student_db_id=student.id) }}" method="POST">
+                        <div class="row g-2">
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Logins/Wk</label>
+                                <input type="number" name="login_frequency" class="form-control dark-input" value="{{ lms.login_frequency if lms else '5' }}" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Downloads</label>
+                                <input type="number" name="materials_accessed" class="form-control dark-input" value="{{ lms.materials_accessed if lms else '20' }}" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Quiz Try</label>
+                                <input type="number" name="quiz_attempts" class="form-control dark-input" value="{{ lms.quiz_attempts if lms else '2' }}" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Time (Hrs)</label>
+                                <input type="number" step="0.1" name="time_spent" class="form-control dark-input" value="{{ lms.time_spent if lms else '10.0' }}" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Submits</label>
+                                <input type="number" name="assignments_submitted" class="form-control dark-input" value="{{ lms.assignments_submitted if lms else '5' }}" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Total Assign</label>
+                                <input type="number" name="total_assignments" class="form-control dark-input" value="{{ lms.total_assignments if lms else '5' }}" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Late Subs</label>
+                                <input type="number" name="late_submissions" class="form-control dark-input" value="0" required>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <label class="form-label text-muted small">Posts</label>
+                                <input type="number" name="discussion_participation" class="form-control dark-input" value="0" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 text-dark fw-bold mt-2">Log LMS Log</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab 4: Student Trends Charts -->
+    <div class="tab-pane fade" id="charts" role="tabpanel" aria-labelledby="charts-tab">
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-md-6">
+                <div class="glass-card chart-card">
+                    <h3 class="card-section-title mb-4">Internal Assessments & Attendance Trend</h3>
+                    <div style="height: 250px; position:relative;">
+                        <canvas id="studentAcadAttChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12 col-md-6">
+                <div class="glass-card chart-card">
+                    <h3 class="card-section-title mb-4">LMS Platform Usage Hours vs Logins</h3>
+                    <div style="height: 250px; position:relative;">
+                        <canvas id="studentLmsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-12">
+                <div class="glass-card chart-card">
+                    <h3 class="card-section-title mb-4">Academic Risk Probability Timeline (%)</h3>
+                    <div style="height: 220px; position:relative;">
+                        <canvas id="studentRiskTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Add Intervention -->
+<div class="modal fade" id="addInterventionModal" tabindex="-1" aria-labelledby="addInterventionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content glass-card p-0 border-secondary">
+            <div class="modal-header border-dark bg-dark-subtle p-3">
+                <h5 class="modal-title text-white" id="addInterventionModalLabel"><i class="fa-solid fa-hand-holding-hand me-2 text-info"></i>Record Support Intervention</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="{{ url_for('intervention.add_intervention_view', student_db_id=student.id) }}" method="POST">
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label for="intervention_type" class="form-label text-muted small">Intervention Strategy</label>
+                        <select name="intervention_type" id="intervention_type" class="form-select dark-input" required>
+                            {% for option in supported_interventions %}
+                                <option value="{{ option }}">{{ option }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label text-muted small">Intervention Plan Description</label>
+                        <textarea name="description" id="description" class="form-control dark-input" rows="4" placeholder="Detail action steps e.g. Assign study buddies, establish attendance schedule..." required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="follow_up_date" class="form-label text-muted small">Follow-up Review Date (Optional)</label>
+                        <input type="date" name="follow_up_date" id="follow_up_date" class="form-control dark-input">
+                    </div>
+                </div>
+                
+                <div class="modal-footer border-dark bg-dark-subtle p-3">
+                    <button type="button" class="btn btn-outline-secondary text-light border-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-info px-4">Register Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inject dataset lists for Chart rendering
+    const studentChartData = {{ chart_data | safe }};
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endblock %}
